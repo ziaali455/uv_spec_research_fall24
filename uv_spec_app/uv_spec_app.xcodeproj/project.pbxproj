@@ -15,6 +15,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		4D2492482CA6185300A319E3 /* uv-spec-app-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "uv-spec-app-Info.plist"; sourceTree = SOURCE_ROOT; };
 		4DF0EB672CA0E4AF000F815F /* uv_spec_app.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = uv_spec_app.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4DF0EB6A2CA0E4AF000F815F /* uv_spec_appApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = uv_spec_appApp.swift; sourceTree = "<group>"; };
 		4DF0EB6C2CA0E4AF000F815F /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -54,6 +55,7 @@
 		4DF0EB692CA0E4AF000F815F /* uv_spec_app */ = {
 			isa = PBXGroup;
 			children = (
+				4D2492482CA6185300A319E3 /* uv-spec-app-Info.plist */,
 				4DF0EB6A2CA0E4AF000F815F /* uv_spec_appApp.swift */,
 				4DF0EB6C2CA0E4AF000F815F /* ContentView.swift */,
 				4DF0EB6E2CA0E4B0000F815F /* Assets.xcassets */,
@@ -273,12 +275,16 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"uv_spec_app/Preview Content\"";
 				DEVELOPMENT_TEAM = 42XNSB68B6;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "uv-spec-app-Info.plist";
+				INFOPLIST_KEY_LSApplicationCategoryType = "";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Camera use.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -302,12 +308,16 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"uv_spec_app/Preview Content\"";
 				DEVELOPMENT_TEAM = 42XNSB68B6;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "uv-spec-app-Info.plist";
+				INFOPLIST_KEY_LSApplicationCategoryType = "";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Camera use.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
