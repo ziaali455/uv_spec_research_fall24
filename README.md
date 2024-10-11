@@ -12,6 +12,6 @@ With the help of NASA funding and support  of the Columbia Radiology Lab, this p
 - Completed the setup of the app in SwiftUI
 - Researched the purpose behind UV imaging and the physics of how it works
 
-### Week 3/3
+### Week 3/4
 - Completed tab bar setup and basic image processing based on hue value
 - Researching the data science aspect of how to process images and place them in the hue range of the desired phosphour
