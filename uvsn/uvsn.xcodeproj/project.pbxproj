@@ -14,6 +14,8 @@
 		4D76662D2CB95C6800752335 /* ImagePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D76662C2CB95C6800752335 /* ImagePicker.swift */; };
 		4D76662F2CB95E7E00752335 /* MainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D76662E2CB95E7E00752335 /* MainView.swift */; };
 		4D7666312CB95EDE00752335 /* ResultsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D7666302CB95EDE00752335 /* ResultsView.swift */; };
+		4DCD99B62CC9488D0039FB69 /* ShareButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DCD99B52CC9488D0039FB69 /* ShareButton.swift */; };
+		4DCD99BA2CC949180039FB69 /* ColorResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DCD99B92CC949180039FB69 /* ColorResultView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -25,6 +27,9 @@
 		4D76662C2CB95C6800752335 /* ImagePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImagePicker.swift; sourceTree = "<group>"; };
 		4D76662E2CB95E7E00752335 /* MainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainView.swift; sourceTree = "<group>"; };
 		4D7666302CB95EDE00752335 /* ResultsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultsView.swift; sourceTree = "<group>"; };
+		4D7666322CB964DE00752335 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		4DCD99B52CC9488D0039FB69 /* ShareButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareButton.swift; sourceTree = "<group>"; };
+		4DCD99B92CC949180039FB69 /* ColorResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorResultView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -58,6 +63,9 @@
 		4D76661D2CB95C3900752335 /* uvsn */ = {
 			isa = PBXGroup;
 			children = (
+				4DCD99B52CC9488D0039FB69 /* ShareButton.swift */,
+				4DCD99B92CC949180039FB69 /* ColorResultView.swift */,
+				4D7666322CB964DE00752335 /* Info.plist */,
 				4D76661E2CB95C3900752335 /* uvsnApp.swift */,
 				4D76662E2CB95E7E00752335 /* MainView.swift */,
 				4D7666202CB95C3900752335 /* ContentView.swift */,
@@ -146,9 +154,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4DCD99BA2CC949180039FB69 /* ColorResultView.swift in Sources */,
 				4D76662D2CB95C6800752335 /* ImagePicker.swift in Sources */,
 				4D76662F2CB95E7E00752335 /* MainView.swift in Sources */,
 				4D7666212CB95C3900752335 /* ContentView.swift in Sources */,
+				4DCD99B62CC9488D0039FB69 /* ShareButton.swift in Sources */,
 				4D7666312CB95EDE00752335 /* ResultsView.swift in Sources */,
 				4D76661F2CB95C3900752335 /* uvsnApp.swift in Sources */,
 			);
@@ -287,6 +297,9 @@
 				DEVELOPMENT_TEAM = 42XNSB68B6;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = uvsn/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "";
+				INFOPLIST_KEY_NSCameraUsageDescription = "App requires camera";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -316,6 +329,9 @@
 				DEVELOPMENT_TEAM = 42XNSB68B6;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = uvsn/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "";
+				INFOPLIST_KEY_NSCameraUsageDescription = "App requires camera";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

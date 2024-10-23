@@ -4,7 +4,6 @@
 //
 //  Created by Ali Zia on 10/11/24.
 //
-
 import SwiftUI
 
 struct ResultsView: View {
@@ -14,42 +13,48 @@ struct ResultsView: View {
                 List {
                     // Table headers
                     HStack {
-                        Text("Given Name").bold()
+                        Text("Date").bold()
                         Spacer()
-                        Text("Family Name").bold()
-                        Spacer()
-                        Text("E-Mail Address").bold()
+                        Text("Metadata").bold()
                     }
-
+                   
                     // Table rows
                     ForEach(results) { result in
                         HStack {
-                            Text(result.givenName)
+                            Text(result.dateTaken, style: .date) // Format date nicely
                             Spacer()
-                            Text(result.familyName)
-                            Spacer()
-                            Text(result.emailAddress)
+                            Button(action: {
+                                // Action when metadata button is clicked
+                                print("Metadata clicked: \(result.metadata)")
+                            }) {
+                                Text("view")
+                                    .padding()
+                                    .fontWeight(.bold)
+                                    .background(Color.black)
+                                    .foregroundColor(.white)
+                                    .cornerRadius(5)
+                            }
                         }
                     }
                 }
-                .navigationTitle("Results")
+                .navigationTitle("results")
             }
         }
+        .background(Color.white)
     }
 }
 
-struct Result: Identifiable {
-    let givenName: String
-    let familyName: String
-    let emailAddress: String
-    let id = UUID()
 
-    var fullName: String { givenName + " " + familyName }
+struct Result: Identifiable {
+    let dateTaken: Date
+    let metadata: String
+    let id = UUID() // Ensure each result has a unique ID
 }
 
+// Initialize the array with correct types for each Result
 private var results = [
-    Result(givenName: "Juan", familyName: "Chavez", emailAddress: "juanchavez@icloud.com"),
-    Result(givenName: "Mei", familyName: "Chen", emailAddress: "meichen@icloud.com"),
-    Result(givenName: "Tom", familyName: "Clark", emailAddress: "tomclark@icloud.com"),
-    Result(givenName: "Gita", familyName: "Kumar", emailAddress: "gitakumar@icloud.com")
+    Result(dateTaken: Date(timeIntervalSince1970: 1609459200), metadata: "Sample metadata 1"),
+    Result(dateTaken: Date(timeIntervalSince1970: 1612137600), metadata: "Sample metadata 2"),
+    Result(dateTaken: Date(timeIntervalSince1970: 1614556800), metadata: "Sample metadata 3"),
+    Result(dateTaken: Date(timeIntervalSince1970: 1617235200), metadata: "Sample metadata 4")
 ]

@@ -1,44 +1,38 @@
-//
-//  ImagePicker.swift
-//  uv_spec_app
-//
-//  Created by Ali Zia on 9/22/24.
-//
-
+//TODO: Raw conversion
 import SwiftUI
-import UIKit
-
 struct ImagePicker: UIViewControllerRepresentable {
-    class Coordinator: NSObject, UINavigationControllerDelegate, UIImagePickerControllerDelegate {
-        let parent: ImagePicker
+@Binding var image: UIImage?
+@Binding var isShowingCamera: Bool
 
-        init(parent: ImagePicker) {
-            self.parent = parent
+class Coordinator: NSObject, UINavigationControllerDelegate, UIImagePickerControllerDelegate {
+    var parent: ImagePicker
+
+    init(parent: ImagePicker) {
+        self.parent = parent
+    }
+
+    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
+        if let uiImage = info[.originalImage] as? UIImage {
+            parent.image = uiImage
         }
-
-        func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
-            if let uiImage = info[.originalImage] as? UIImage {
-                parent.image = uiImage
-            }
-            parent.presentationMode.wrappedValue.dismiss()
-        }
+        parent.isShowingCamera = false
     }
 
-    @Binding var image: UIImage?
-    @Environment(\.presentationMode) var presentationMode
-    var sourceType: UIImagePickerController.SourceType = .camera
-
-    func makeCoordinator() -> Coordinator {
-        Coordinator(parent: self)
+    func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+        parent.isShowingCamera = false
     }
-
-    func makeUIViewController(context: Context) -> UIImagePickerController {
-        let picker = UIImagePickerController()
-        picker.delegate = context.coordinator
-        picker.sourceType = sourceType
-        return picker
-    }
-
-    func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
 }
 
+func makeCoordinator() -> Coordinator {
+    Coordinator(parent: self)
+}
+
+func makeUIViewController(context: Context) -> UIImagePickerController {
+    let picker = UIImagePickerController()
+    picker.sourceType = .camera
+    picker.delegate = context.coordinator
+    return picker
+}
+
+func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
+}
