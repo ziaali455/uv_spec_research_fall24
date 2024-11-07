@@ -16,6 +16,7 @@
 		4D7666312CB95EDE00752335 /* ResultsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D7666302CB95EDE00752335 /* ResultsView.swift */; };
 		4DCD99B62CC9488D0039FB69 /* ShareButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DCD99B52CC9488D0039FB69 /* ShareButton.swift */; };
 		4DCD99BA2CC949180039FB69 /* ColorResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DCD99B92CC949180039FB69 /* ColorResultView.swift */; };
+		4DCFD3462CDD40C400B55FAD /* CaptureView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DCFD3452CDD40C400B55FAD /* CaptureView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -30,6 +31,7 @@
 		4D7666322CB964DE00752335 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		4DCD99B52CC9488D0039FB69 /* ShareButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareButton.swift; sourceTree = "<group>"; };
 		4DCD99B92CC949180039FB69 /* ColorResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorResultView.swift; sourceTree = "<group>"; };
+		4DCFD3452CDD40C400B55FAD /* CaptureView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -46,6 +48,7 @@
 		4D7666122CB95C3900752335 = {
 			isa = PBXGroup;
 			children = (
+				4DCFD3452CDD40C400B55FAD /* CaptureView.swift */,
 				4D7666302CB95EDE00752335 /* ResultsView.swift */,
 				4D76661D2CB95C3900752335 /* uvsn */,
 				4D76661C2CB95C3900752335 /* Products */,
@@ -157,6 +160,7 @@
 				4DCD99BA2CC949180039FB69 /* ColorResultView.swift in Sources */,
 				4D76662D2CB95C6800752335 /* ImagePicker.swift in Sources */,
 				4D76662F2CB95E7E00752335 /* MainView.swift in Sources */,
+				4DCFD3462CDD40C400B55FAD /* CaptureView.swift in Sources */,
 				4D7666212CB95C3900752335 /* ContentView.swift in Sources */,
 				4DCD99B62CC9488D0039FB69 /* ShareButton.swift in Sources */,
 				4D7666312CB95EDE00752335 /* ResultsView.swift in Sources */,
