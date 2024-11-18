@@ -8,7 +8,7 @@
 import Foundation
 import SwiftUI
 import UIKit
-import CoreGraphics
+import AVFoundation
 
 struct CaptureView: View {
     @State private var isShowingCamera = false
@@ -48,13 +48,13 @@ struct CaptureView: View {
             )
         }
         .sheet(isPresented: $isShowingCamera) {
-            ImagePicker(image: $inputImage, isShowingCamera: $isShowingCamera)
+            CustomCameraView(image: $inputImage, isShowingCamera: $isShowingCamera)
         }
     }
 
     private func processImageForHues(_ image: UIImage) -> [[CGFloat]] {
         // Resize the image to reduce the number of pixels to process
-        let resizedImage = image.resizeImage(targetSize: CGSize(width: 100, height: 100)) // Adjust the target size as needed
+        let resizedImage = image // Adjust the target size as needed
 
         guard let cgImage = resizedImage.cgImage else {
             print("Error: Could not get CGImage")
@@ -100,11 +100,9 @@ struct CaptureView: View {
                     .getHue(&hue, saturation: &saturation, brightness: &brightness, alpha: nil)
 
                 // Handle black pixels or low saturation pixels (hue undefined)
-                // If the pixel is black or near black, we set the hue to 0
                 if rValue == 0 && gValue == 0 && bValue == 0 {
                     hue = 0
                 } else if saturation < 0.1 {
-                    // If saturation is too low (near gray), set hue to 0 as it is undefined
                     hue = 0
                 }
 
@@ -115,74 +113,142 @@ struct CaptureView: View {
 
         return hueMatrix
     }
+}
 
+// MARK: - Custom Camera View
+struct CustomCameraView: UIViewControllerRepresentable {
+    @Binding var image: UIImage?
+    @Binding var isShowingCamera: Bool
 
+    func makeUIViewController(context: Context) -> CameraViewController {
+        let controller = CameraViewController()
+        controller.delegate = context.coordinator
+        return controller
+    }
 
-    // Function to convert an image to RGBG format (R, G1, B, G2)
-    private func convertToRGBG(image: UIImage) -> UIImage? {
-        guard let cgImage = image.cgImage else {
-            print("Error: Could not get CGImage")
-            return nil
+    func updateUIViewController(_ uiViewController: CameraViewController, context: Context) {}
+
+    func makeCoordinator() -> Coordinator {
+        return Coordinator(self)
+    }
+
+    class Coordinator: NSObject, CameraViewControllerDelegate {
+        var parent: CustomCameraView
+
+        init(_ parent: CustomCameraView) {
+            self.parent = parent
         }
 
-        let width = cgImage.width
-        let height = cgImage.height
-        
-        // Create a bitmap context to hold the new RGBG image data
-        let colorSpace = CGColorSpaceCreateDeviceRGB() // RGB color space
-        let bitsPerComponent = 8
-        let bytesPerRow = width * 4  // 4 bytes per pixel: RGBA -> will be RGBG (4 channels)
-        
-        guard let context = CGContext(data: nil,
-                                      width: width,
-                                      height: height,
-                                      bitsPerComponent: bitsPerComponent,
-                                      bytesPerRow: bytesPerRow,
-                                      space: colorSpace,
-                                      bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue) else {
-            print("Error: Could not create CGContext")
-            return nil
+        func cameraViewControllerDidCapture(image: UIImage) {
+            parent.image = image
+            parent.isShowingCamera = false
         }
 
-        // Draw the original image onto the new context
-        context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
+        func cameraViewControllerDidCancel() {
+            parent.isShowingCamera = false
+        }
+    }
+}
 
-        // Get pixel data from the context
-        guard let pixelData = context.data else {
-            print("Error: Could not retrieve pixel data")
-            return nil
+// MARK: - Camera View Controller
+protocol CameraViewControllerDelegate: AnyObject {
+    func cameraViewControllerDidCapture(image: UIImage)
+    func cameraViewControllerDidCancel()
+}
+
+class CameraViewController: UIViewController, AVCapturePhotoCaptureDelegate {
+    weak var delegate: CameraViewControllerDelegate?
+    private let captureSession = AVCaptureSession()
+    private let photoOutput = AVCapturePhotoOutput()
+    private var previewLayer: AVCaptureVideoPreviewLayer!
+
+    private let shutterButton: UIButton = {
+        let button = UIButton(type: .custom)
+        button.backgroundColor = .white
+        button.layer.cornerRadius = 35
+        button.layer.borderColor = UIColor.gray.cgColor
+        button.layer.borderWidth = 3
+        button.translatesAutoresizingMaskIntoConstraints = false
+        return button
+    }()
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        setupCamera()
+        setupUI()
+    }
+
+    private func setupCamera() {
+        captureSession.beginConfiguration()
+
+        // Configure input
+        guard let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back),
+              let input = try? AVCaptureDeviceInput(device: device),
+              captureSession.canAddInput(input) else {
+            print("Error: Unable to add camera input.")
+            return
+        }
+        captureSession.addInput(input)
+
+        // Configure output
+        if captureSession.canAddOutput(photoOutput) {
+            captureSession.addOutput(photoOutput)
+        }
+        photoOutput.isHighResolutionCaptureEnabled = true
+
+        if !photoOutput.availableRawPhotoPixelFormatTypes.isEmpty {
+            print("RAW photo capture is supported.")
+        } else {
+            print("RAW photo capture is not supported on this device.")
         }
 
-        let data = pixelData.bindMemory(to: UInt8.self, capacity: width * height * 4) // Each pixel has 4 bytes
+        captureSession.commitConfiguration()
 
-        // Process each pixel to create the RGBG format
-        for y in 0..<height {
-            for x in 0..<width {
-                let pixelIndex = ((y * width) + x) * 4  // Each pixel is represented by 4 bytes in the context
+        // Configure preview layer
+        previewLayer = AVCaptureVideoPreviewLayer(session: captureSession)
+        previewLayer.frame = view.bounds
+        previewLayer.videoGravity = .resizeAspectFill
+        view.layer.addSublayer(previewLayer)
 
-                // Read RGBA values (Assume data is in RGBA format initially)
-                let r = data[pixelIndex]
-                let g = data[pixelIndex + 1]
-                let b = data[pixelIndex + 2]
-                let a = data[pixelIndex + 3]
+        // Start the session
+        captureSession.startRunning()
+    }
 
-                // Set the Green2 channel (G2) to be the same as Green1 (G1)
-                data[pixelIndex + 1] = g // G1 (no change)
-                data[pixelIndex + 3] = g // G2 (duplicate G1 as G2)
+    private func setupUI() {
+        // Add shutter button to the view
+        view.addSubview(shutterButton)
+        NSLayoutConstraint.activate([
+            shutterButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            shutterButton.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -50),
+            shutterButton.widthAnchor.constraint(equalToConstant: 70),
+            shutterButton.heightAnchor.constraint(equalToConstant: 70)
+        ])
 
-                // Update the pixel data with new RGBG values
-                data[pixelIndex] = r   // R
-                data[pixelIndex + 2] = b // B
-            }
+        // Add target for shutter button
+        shutterButton.addTarget(self, action: #selector(shutterButtonTapped), for: .touchUpInside)
+    }
+
+    @objc private func shutterButtonTapped() {
+        if let rawPixelFormat = photoOutput.availableRawPhotoPixelFormatTypes.first {
+            let photoSettings = AVCapturePhotoSettings(rawPixelFormatType: rawPixelFormat)
+            photoOutput.capturePhoto(with: photoSettings, delegate: self)
+        } else {
+            print("RAW photo format is unavailable.")
+        }
+    }
+
+    func photoOutput(_ output: AVCapturePhotoOutput, didFinishProcessingPhoto photo: AVCapturePhoto, error: Error?) {
+        guard error == nil,
+              let rawData = photo.fileDataRepresentation(),
+              let image = UIImage(data: rawData) else {
+            print("Error capturing photo: \(error?.localizedDescription ?? "Unknown error")")
+            return
         }
 
-        // Create a new CGImage from the modified pixel data
-        guard let newCGImage = context.makeImage() else {
-            print("Error: Could not create new CGImage")
-            return nil
-        }
+        delegate?.cameraViewControllerDidCapture(image: image)
+    }
 
-        // Return the new UIImage
-        return UIImage(cgImage: newCGImage)
+    func cancel() {
+        delegate?.cameraViewControllerDidCancel()
     }
 }
