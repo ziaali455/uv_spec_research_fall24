@@ -4,22 +4,27 @@
 //
 //  Created by Ali Zia on 11/7/24.
 //
-
-import Foundation
+// https://developer.apple.com/documentation/avfoundation/capturing-photos-in-raw-and-apple-proraw-formats
 import SwiftUI
-import UIKit
-import CoreGraphics
+import AVFoundation
 
 struct CaptureView: View {
     @State private var isShowingCamera = false
     @State private var inputImage: UIImage?
     @State private var isLoading = false
     @State private var commonColors: [[CGFloat]] = []
-    @State private var showResults = false // New state for showing results
+    @State private var showResults = false
+    @State private var isRawSupported: Bool = false
+    @State private var isFirstOpen: Bool = true // Track if this is the first time the view is opened
+
+    // Capture session and photo output properties
+    private let captureSession = AVCaptureSession()
+    private let photoOutput = AVCapturePhotoOutput()
 
     var body: some View {
         NavigationView {
             VStack {
+                Spacer()
                 ImageSection(inputImage: $inputImage)
 
                 if inputImage != nil {
@@ -27,8 +32,8 @@ struct CaptureView: View {
                         isLoading: $isLoading,
                         inputImage: $inputImage,
                         commonColors: $commonColors,
-                        showResults: $showResults, // Pass this binding
-                        extractCommonHues: processImageForHues // Pass the function
+                        showResults: $showResults,
+                        extractCommonHues: processImageForHues
                     )
                 }
 
@@ -37,20 +42,81 @@ struct CaptureView: View {
                 if isLoading {
                     ProgressView("Processing...")
                 }
+
+                Spacer()
+
+                if isFirstOpen {
+                    Text(isRawSupported ? "Camera capturing in RAW" : "Camera does not support RAW capture")
+                        .font(.footnote)
+                        .foregroundColor(isRawSupported ? .green : .red)
+                        .padding()
+                        .onAppear {
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                                isFirstOpen = false // Hide the text after 3 seconds
+                            }
+                        }
+                }
             }
             .navigationTitle("uvsn")
             .background(
                 NavigationLink(
                     destination: ColorResultView(colors: commonColors),
-                    isActive: $showResults, // Navigate when showResults is true
+                    isActive: $showResults,
                     label: { EmptyView() }
                 )
             )
+        }
+        .onAppear {
+            setupSession()
         }
         .sheet(isPresented: $isShowingCamera) {
             ImagePicker(image: $inputImage, isShowingCamera: $isShowingCamera)
         }
     }
+    private func setupSession() {
+            do {
+                // Start the capture session configuration
+                captureSession.beginConfiguration()
+
+                // Set session preset for photo capture
+                captureSession.sessionPreset = .photo
+
+                // Configure the default video device
+                guard let defaultVideoDevice = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back) else {
+                    print("Error: No default video device available.")
+                    return
+                }
+
+                let videoInput = try AVCaptureDeviceInput(device: defaultVideoDevice)
+                if captureSession.canAddInput(videoInput) {
+                    captureSession.addInput(videoInput)
+                } else {
+                    throw CameraError.setupFailed
+                }
+
+                // Configure the photo output
+                if captureSession.canAddOutput(photoOutput) {
+                    captureSession.addOutput(photoOutput)
+
+                    // Enable Apple ProRAW if supported
+                    if photoOutput.isAppleProRAWSupported {
+                        photoOutput.isAppleProRAWEnabled = true
+                        isRawSupported = true
+                    } else {
+                        isRawSupported = false
+                    }
+                } else {
+                    throw CameraError.setupFailed
+                }
+
+                // Commit the configuration
+                captureSession.commitConfiguration()
+            } catch {
+                print("Error setting up session: \(error)")
+                isRawSupported = false
+            }
+        }
+
 
     private func processImageForHues(_ image: UIImage) -> [[CGFloat]] {
         // Resize the image to reduce the number of pixels to process
@@ -185,4 +251,7 @@ struct CaptureView: View {
         // Return the new UIImage
         return UIImage(cgImage: newCGImage)
     }
+}
+enum CameraError: Error {
+    case setupFailed
 }
