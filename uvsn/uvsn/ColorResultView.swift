@@ -2,10 +2,26 @@ import SwiftUI
 
 struct ColorResultView: View {
     var colors: [[CGFloat]] // The original 2D array representing the hue matrix
+    var associatedImage: UIImage? // Optional image associated with the hue data
     @State private var isLoading: Bool = true // Start in loading state
 
     var body: some View {
         VStack {
+            // Display the associated image
+            if let image = associatedImage {
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(maxHeight: 300)
+                    .padding()
+                    .background(Color.gray.opacity(0.2))
+                    .cornerRadius(10)
+            } else {
+                Text("No Image Available")
+                    .foregroundColor(.gray)
+                    .padding()
+            }
+
             Text("Hue Matrix (Compressed):")
                 .font(.headline)
                 .padding(.top)
@@ -42,7 +58,7 @@ struct ColorResultView: View {
                     .shadow(radius: 5) // Add shadow for better visual appeal
                 }
                 .frame(height: 300) // Set a fixed height for the scrollable area
-                
+
                 // Share button to share the original hue data
                 Button(action: {
                     shareHueData()
@@ -66,16 +82,16 @@ struct ColorResultView: View {
             }
         }
     }
-    
+
     // Function to compress the hue matrix for display
     private func compressMatrix(_ matrix: [[CGFloat]], targetRows: Int, targetCols: Int) -> [[CGFloat]] {
         let rowCount = matrix.count
         let colCount = matrix.first?.count ?? 0
-        
+
         // Calculate the ratio for downsampling
         let rowRatio = max(1, rowCount / targetRows) // Prevent division by zero
         let colRatio = max(1, colCount / targetCols) // Prevent division by zero
-        
+
         var compressedMatrix: [[CGFloat]] = Array(repeating: Array(repeating: 0, count: targetCols), count: targetRows)
 
         for i in 0..<targetRows {
@@ -83,7 +99,7 @@ struct ColorResultView: View {
                 // Calculate the average hue for the compressed area
                 var sum: CGFloat = 0
                 var count: CGFloat = 0
-                
+
                 for row in (i * rowRatio)..<min((i + 1) * rowRatio, rowCount) {
                     for col in (j * colRatio)..<min((j + 1) * colRatio, colCount) {
                         sum += matrix[row][col]
@@ -96,7 +112,7 @@ struct ColorResultView: View {
 
         return compressedMatrix
     }
-    
+
     // Function to share the original hue data as JSON
     private func shareHueData() {
         let jsonData: Data
