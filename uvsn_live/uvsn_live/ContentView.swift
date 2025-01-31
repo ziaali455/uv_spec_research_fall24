@@ -247,10 +247,12 @@ struct ContentView: View {
     @State private var averageChromaticity: (CGFloat, CGFloat)? = nil
     @State private var averageXYChromaticity: (CGFloat, CGFloat)? = nil
     @State private var isPickerPresented = false
+    @State private var rgbaMatrix: [[[CGFloat]]]? = nil // Store the RGBA values
+    @State private var averageXYZ: (CGFloat, CGFloat, CGFloat)? = nil // Store the average XYZ values
 
     var body: some View {
         VStack(spacing: 20) {
-            if let chromaticity = averageChromaticity, let xyChromaticity = averageXYChromaticity {
+            if let chromaticity = averageChromaticity, let xyChromaticity = averageXYChromaticity, let xyz = averageXYZ {
                 Text("Average Chromaticity")
                     .font(.headline)
                 Text(String(format: "r: %.2f, g: %.2f", chromaticity.0, chromaticity.1))
@@ -260,6 +262,12 @@ struct ContentView: View {
                 Text("Average x, y Chromaticity")
                     .font(.headline)
                 Text(String(format: "x: %.2f, y: %.2f", xyChromaticity.0, xyChromaticity.1))
+                    .font(.body)
+                    .padding()
+
+                Text("Average XYZ Values")
+                    .font(.headline)
+                Text(String(format: "X: %.2f, Y: %.2f, Z: %.2f", xyz.0, xyz.1, xyz.2))
                     .font(.body)
                     .padding()
             } else {
@@ -276,19 +284,31 @@ struct ContentView: View {
                     .foregroundColor(.white)
                     .cornerRadius(8)
             }
+
+            if rgbaMatrix != nil {
+                Button(action: exportRGBAValues) {
+                    Text("Export RGBA Matrix")
+                        .padding()
+                        .background(Color.green)
+                        .foregroundColor(.white)
+                        .cornerRadius(8)
+                }
+            }
         }
         .sheet(isPresented: $isPickerPresented) {
             ImagePicker(onImagePicked: { image in
-                let chromaticity = calculateAverageChromaticity(from: image)
-                averageChromaticity = chromaticity.rgbChromaticity
-                averageXYChromaticity = chromaticity.xyChromaticity
+                let result = calculateAverageChromaticity(from: image)
+                averageChromaticity = result.rgbChromaticity
+                averageXYChromaticity = result.xyChromaticity
+                averageXYZ = result.xyzValues
+                rgbaMatrix = generateRGBAMatrix(from: image)
             })
         }
         .padding()
     }
 
-    func calculateAverageChromaticity(from image: UIImage) -> (rgbChromaticity: (CGFloat, CGFloat), xyChromaticity: (CGFloat, CGFloat)) {
-        guard let cgImage = image.cgImage else { return ((0.0, 0.0), (0.0, 0.0)) }
+    func calculateAverageChromaticity(from image: UIImage) -> (rgbChromaticity: (CGFloat, CGFloat), xyChromaticity: (CGFloat, CGFloat), xyzValues: (CGFloat, CGFloat, CGFloat)) {
+        guard let cgImage = image.cgImage else { return ((0.0, 0.0), (0.0, 0.0), (0.0, 0.0, 0.0)) }
 
         let width = cgImage.width
         let height = cgImage.height
@@ -296,19 +316,19 @@ struct ContentView: View {
         let bytesPerRow = bytesPerPixel * width
         let totalBytes = height * bytesPerRow
 
-        guard let colorSpace = CGColorSpace(name: CGColorSpace.sRGB) else { return ((0.0, 0.0), (0.0, 0.0)) }
+        guard let colorSpace = CGColorSpace(name: CGColorSpace.sRGB) else { return ((0.0, 0.0), (0.0, 0.0), (0.0, 0.0, 0.0)) }
         var pixelData = [UInt8](repeating: 0, count: totalBytes)
 
         guard let context = CGContext(
             data: &pixelData,
             width: width,
             height: height,
-            bitsPerComponent: 8, //confused, should this be 3?
+            bitsPerComponent: 8,
             bytesPerRow: bytesPerRow,
             space: colorSpace,
             bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
         ) else {
-            return ((0.0, 0.0), (0.0, 0.0))
+            return ((0.0, 0.0), (0.0, 0.0), (0.0, 0.0, 0.0))
         }
 
         context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
@@ -316,42 +336,145 @@ struct ContentView: View {
         var totalR: CGFloat = 0.0
         var totalG: CGFloat = 0.0
         var totalB: CGFloat = 0.0
+        var totalX: CGFloat = 0.0
+        var totalY: CGFloat = 0.0
+        var totalZ: CGFloat = 0.0
         var count: Int = 0
 
         for y in 0..<height {
             for x in 0..<width {
                 let offset = (y * bytesPerRow) + (x * bytesPerPixel)
-                let r = CGFloat(pixelData[offset]) / 255.0
-                let g = CGFloat(pixelData[offset + 1]) / 255.0
-                let b = CGFloat(pixelData[offset + 2]) / 255.0
+                let r_sRGB = CGFloat(pixelData[offset]) / 255.0
+                let g_sRGB = CGFloat(pixelData[offset + 1]) / 255.0
+                let b_sRGB = CGFloat(pixelData[offset + 2]) / 255.0
 
-                let sum = r + g + b
-                if sum > 0 {
-                    let normalizedR = r / sum
-                    let normalizedG = g / sum
-                    let normalizedB = b / sum
-                    totalR += normalizedR
-                    totalG += normalizedG
-                    totalB += normalizedB
-                    count += 1
-                }
+                // Convert sRGB to Linear RGB
+                let r = sRGBToLinear(r_sRGB)
+                let g = sRGBToLinear(g_sRGB)
+                let b = sRGBToLinear(b_sRGB)
+
+                // Convert Linear RGB to XYZ using CIE RGB E Illuminant
+                let X = (0.4887180 * r) + (0.3106803 * g) + (0.2006017 * b)
+                let Y = (0.1762044 * r) + (0.8129847 * g) + (0.0108109 * b)
+                let Z = (0.0000000 * r) + (0.0102048 * g) + (0.9897952 * b)
+
+                totalR += r
+                totalG += g
+                totalB += b
+                totalX += X
+                totalY += Y
+                totalZ += Z
+                count += 1
             }
         }
+        //old conversion
+        /*
+         for y in 0..<height {
+             for x in 0..<width {
+                 let offset = (y * bytesPerRow) + (x * bytesPerPixel)
+                 let r = CGFloat(pixelData[offset]) / 255.0
+                 let g = CGFloat(pixelData[offset + 1]) / 255.0
+                 let b = CGFloat(pixelData[offset + 2]) / 255.0
 
-        guard count > 0 else { return ((0.0, 0.0), (0.0, 0.0)) }
+                 // Convert normalized RGB to XYZ using sRGB D65 matrix
+                 let X = (0.4124564 * r) + (0.3575761 * g) + (0.1804375 * b)
+                 let Y = (0.2126729 * r) + (0.7151522 * g) + (0.0721750 * b)
+                 let Z = (0.0193339 * r) + (0.1191920 * g) + (0.9503041 * b)
+
+                 totalR += r
+                 totalG += g
+                 totalB += b
+                 totalX += X
+                 totalY += Y
+                 totalZ += Z
+                 count += 1
+             }
+         }
+         **/
+
+        guard count > 0 else { return ((0.0, 0.0), (0.0, 0.0), (0.0, 0.0, 0.0)) }
 
         let averageR = totalR / CGFloat(count)
         let averageG = totalG / CGFloat(count)
         let averageB = totalB / CGFloat(count)
 
-        //potentially extract magnitude of G
-        
-        
-        // Calculate x, y chromaticity
-        let x = averageR / (averageR + averageG + averageB)
-        let y = averageG / (averageR + averageG + averageB)
+        let averageX = totalX / CGFloat(count)
+        let averageY = totalY / CGFloat(count)
+        let averageZ = totalZ / CGFloat(count)
 
-        return ((averageR, averageG), (x, y))
+        // Calculate x, y chromaticity
+        let chromaticityX = averageX / (averageX + averageY + averageZ)
+        let chromaticityY = averageY / (averageX + averageY + averageZ)
+
+        return ((averageR, averageG), (chromaticityX, chromaticityY), (averageX, averageY, averageZ))
+    }
+
+
+
+
+    func generateRGBAMatrix(from image: UIImage) -> [[[CGFloat]]]? {
+        guard let cgImage = image.cgImage else { return nil }
+        
+        let targetWidth = 100
+        let targetHeight = 100
+        
+        guard let context = CGContext(
+            data: nil,
+            width: targetWidth,
+            height: targetHeight,
+            bitsPerComponent: 8,
+            bytesPerRow: 0,
+            space: CGColorSpaceCreateDeviceRGB(),
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        ) else {
+            return nil }
+        
+        context.interpolationQuality = .high
+        context.draw(cgImage, in: CGRect(x: 0, y: 0, width: targetWidth, height: targetHeight))
+        
+        guard let imageData = context.data else { return nil }
+        
+        let pixelData = unsafeBitCast(imageData, to: UnsafePointer<UInt8>.self)
+        
+        var matrix = [[[CGFloat]]](
+            repeating: [[CGFloat]](repeating: [0, 0, 0, 0], count: targetWidth),
+            count: targetHeight
+        )
+        
+        for y in 0..<targetHeight {
+            for x in 0..<targetWidth {
+                let offset = 4 * (y * targetWidth + x)
+                let r = CGFloat(pixelData[offset]) / 255.0
+                let g = CGFloat(pixelData[offset + 1]) / 255.0
+                let b = CGFloat(pixelData[offset + 2]) / 255.0
+                let a = CGFloat(pixelData[offset + 3]) / 255.0
+                
+                matrix[y][x] = [r, g, b, a]
+            }
+        }
+        
+        return matrix
+    }
+    
+    func sRGBToLinear(_ value: CGFloat) -> CGFloat {
+        return value <= 0.04045 ? value / 12.92 : pow((value + 0.055) / 1.055, 2.4)
+    }
+    
+    func exportRGBAValues() {
+        guard let matrix = rgbaMatrix else { return }
+        do {
+            let jsonData = try JSONSerialization.data(withJSONObject: matrix, options: .prettyPrinted)
+            let url = FileManager.default.temporaryDirectory.appendingPathComponent("RGBAValues.json")
+            try jsonData.write(to: url)
+
+            let activityController = UIActivityViewController(activityItems: [url], applicationActivities: nil)
+            if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+               let rootVC = windowScene.windows.first?.rootViewController {
+                rootVC.present(activityController, animated: true)
+            }
+        } catch {
+            print("Error exporting RGBA values: \(error)")
+        }
     }
 }
 
