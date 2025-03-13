@@ -25,133 +25,169 @@ struct MainView: View {
     @State private var avgXYZValues: (x: CGFloat, y: CGFloat, z: CGFloat)?
     @State private var selectedItem: PhotosPickerItem?
     @State private var isLoading = false
+    @State private var isExporting = false
+
+        var isExportEnabled: Bool {
+            return inputImage != nil && (chromaticity != nil || rgbValues != nil || metadata != nil)
+        }
 
     var body: some View {
-        TabView(selection: $selectedTab) {
-            VStack {
-                if isLoading {
-                    ProgressView("Processing Image...")
-                        .progressViewStyle(CircularProgressViewStyle())
+        NavigationView{
+            TabView(selection: $selectedTab) {
+                VStack {
+                    if isLoading {
+                        ProgressView("Processing Image...")
+                            .progressViewStyle(CircularProgressViewStyle())
+                            .padding()
+                    } else {
+                        if let image = inputImage {
+                            Image(uiImage: image)
+                                .resizable()
+                                .scaledToFit()
+                                .frame(height: 300)
+                        }
+                        
+                        PhotosPicker(selection: $selectedItem, matching: .images) {
+                            Text("Select Photo")
+                        }
                         .padding()
-                } else {
-                    if let image = inputImage {
-                        Image(uiImage: image)
-                            .resizable()
-                            .scaledToFit()
-                            .frame(height: 300)
-                    }
-
-                    PhotosPicker(selection: $selectedItem, matching: .images) {
-                        Text("Select Photo")
-                    }
-                    .padding()
-                    .onChange(of: selectedItem) { newItem in
-                        Task {
-                            if let data = try? await newItem?.loadTransferable(type: Data.self),
-                               let uiImage = UIImage(data: data) {
-                                inputImage = uiImage
-                                processImage(imageData: data)
-                            } else {
-                                print("Failed to load image data.")
+                        .onChange(of: selectedItem) { newItem in
+                            Task {
+                                if let data = try? await newItem?.loadTransferable(type: Data.self),
+                                   let uiImage = UIImage(data: data) {
+                                    inputImage = uiImage
+                                    processImage(imageData: data)
+                                } else {
+                                    print("Failed to load image data.")
+                                }
                             }
                         }
-                    }
-
-                    if let chromaticity = chromaticity, let stdDev = chromaticityStdDev {
-                        Text("Chromaticity: x = \(chromaticity.x), y = \(chromaticity.y)")
-                        Text("Std Dev: x = \(stdDev.x), y = \(stdDev.y)")
-                    }
-
-                    if let avgXYZ = avgXYZValues {
-                        Text("Average XYZ Values:")
-                            .fontWeight(.bold)
-                            .padding(.top, 4)
-                        Text("X = \(avgXYZ.x)")
-                        Text("Y = \(avgXYZ.y)")
-                        Text("Z = \(avgXYZ.z)")
-                    }
-                }
-            }
-            .tabItem {
-                Label("Chromaticity", systemImage: "circle.grid.3x3")
-            }
-            .tag(0)
-
-            VStack {
-                if isLoading {
-                    ProgressView("Processing Image...")
-                        .progressViewStyle(CircularProgressViewStyle())
-                        .padding()
-                } else {
-                    if let image = inputImage {
-                        Image(uiImage: image)
-                            .resizable()
-                            .scaledToFit()
-                            .frame(height: 300)
-                    }
-
-                    PhotosPicker(selection: $selectedItem, matching: .images) {
-                        Text("Select Photo")
-                    }
-                    .padding()
-                    .onChange(of: selectedItem) { newItem in
-                        Task {
-                            if let data = try? await newItem?.loadTransferable(type: Data.self),
-                               let uiImage = UIImage(data: data) {
-                                inputImage = uiImage
-                                processImage(imageData: data)
-                            } else {
-                                print("Failed to load image data.")
-                            }
+                        
+                        if let chromaticity = chromaticity, let stdDev = chromaticityStdDev {
+                            Text("Chromaticity: x = \(chromaticity.x), y = \(chromaticity.y)")
+                            Text("Std Dev: x = \(stdDev.x), y = \(stdDev.y)")
+                        }
+                        
+                        if let avgXYZ = avgXYZValues {
+                            Text("Average XYZ Values:")
+                                .fontWeight(.bold)
+                                .padding(.top, 4)
+                            Text("X = \(avgXYZ.x)")
+                            Text("Y = \(avgXYZ.y)")
+                            Text("Z = \(avgXYZ.z)")
                         }
                     }
-
-                    if let rgb = rgbValues {
-                        Text("RGB Values: [\(rgb.r), \(rgb.g), \(rgb.b)]")
+                }
+                .tabItem {
+                    Label("Chromaticity", systemImage: "circle.grid.3x3")
+                }
+                .tag(0)
+                
+                VStack {
+                    if isLoading {
+                        ProgressView("Processing Image...")
+                            .progressViewStyle(CircularProgressViewStyle())
+                            .padding()
+                    } else {
+                        if let image = inputImage {
+                            Image(uiImage: image)
+                                .resizable()
+                                .scaledToFit()
+                                .frame(height: 300)
+                        }
+                        
+                        PhotosPicker(selection: $selectedItem, matching: .images) {
+                            Text("Select Photo")
+                        }
+                        .padding()
+                        .onChange(of: selectedItem) { newItem in
+                            Task {
+                                if let data = try? await newItem?.loadTransferable(type: Data.self),
+                                   let uiImage = UIImage(data: data) {
+                                    inputImage = uiImage
+                                    processImage(imageData: data)
+                                } else {
+                                    print("Failed to load image data.")
+                                }
+                            }
+                        }
+                        
+                        if let rgb = rgbValues {
+                            Text("RGB Values: [\(rgb.r), \(rgb.g), \(rgb.b)]")
+                        }
                     }
                 }
-            }
-            .tabItem {
-                Label("RGB Values", systemImage: "paintpalette")
-            }
-            .tag(1)
-
-            VStack {
-                if isLoading {
-                    ProgressView("Processing Image...")
-                        .progressViewStyle(CircularProgressViewStyle())
-                        .padding()
-                } else {
-                    if let metadata = metadata {
-                        List {
-                            let metadataSections = metadata.components(separatedBy: "\n\n")
-                            ForEach(metadataSections, id: \.self) { section in
-                                let lines = section.components(separatedBy: "\n")
-                                if let title = lines.first {
-                                    Section(header: Text(title).font(.headline)) {
-                                        ForEach(lines.dropFirst(), id: \.self) { line in
-                                            Text(line)
-                                                .font(.subheadline)
-                                                .foregroundColor(.secondary)
+                .tabItem {
+                    Label("RGB Values", systemImage: "paintpalette")
+                }
+                .tag(1)
+                
+                VStack {
+                    if isLoading {
+                        ProgressView("Processing Image...")
+                            .progressViewStyle(CircularProgressViewStyle())
+                            .padding()
+                    } else {
+                        if let metadata = metadata {
+                            List {
+                                let metadataSections = metadata.components(separatedBy: "\n\n")
+                                ForEach(metadataSections, id: \.self) { section in
+                                    let lines = section.components(separatedBy: "\n")
+                                    if let title = lines.first {
+                                        Section(header: Text(title).font(.headline)) {
+                                            ForEach(lines.dropFirst(), id: \.self) { line in
+                                                Text(line)
+                                                    .font(.subheadline)
+                                                    .foregroundColor(.secondary)
+                                            }
                                         }
                                     }
                                 }
                             }
+                            .listStyle(InsetGroupedListStyle())
+                        } else {
+                            Text("No metadata available")
+                                .padding()
+                                .font(.headline)
                         }
-                        .listStyle(InsetGroupedListStyle())
-                    } else {
-                        Text("No metadata available")
-                            .padding()
-                            .font(.headline)
                     }
                 }
+                .tabItem {
+                    Label("Metadata", systemImage: "info.circle")
+                }
+                .tag(2)
             }
-            .tabItem {
-                Label("Metadata", systemImage: "info.circle")
-            }
-            .tag(2)
+            .navigationTitle("uvsn")
+                        .toolbar {
+                            ToolbarItem(placement: .navigationBarTrailing) {
+                                Button(action: exportData) {
+                                    Image(systemName: "square.and.arrow.up")
+                                }
+                                .disabled(!isExportEnabled)
+                            }
+                        }
         }
     }
+    func exportData() {
+            guard isExportEnabled else { return }
+
+            let exportDict: [String: Any] = [
+                "Chromaticity": chromaticity.map { ["x": $0.x, "y": $0.y] } ?? [:],
+                "RGB": rgbValues.map { ["r": $0.r, "g": $0.g, "b": $0.b] } ?? [:],
+                "Metadata": metadata ?? "No metadata available"
+            ]
+
+            if let jsonData = try? JSONSerialization.data(withJSONObject: exportDict, options: .prettyPrinted) {
+                let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent("export.json")
+                try? jsonData.write(to: tempURL)
+
+                let activityView = UIActivityViewController(activityItems: [tempURL], applicationActivities: nil)
+
+                if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
+                    scene.windows.first?.rootViewController?.present(activityView, animated: true, completion: nil)
+                }
+            }
+        }
 
 
     func processImage(imageData: Data? = nil) {
