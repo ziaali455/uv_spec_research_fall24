@@ -1,0 +1,182 @@
+aiohttp==3.8.4
+aiosignal==1.3.1
+altair==4.2.2
+anyio==3.6.1
+appnope==0.1.3
+argon2-cffi==21.3.0
+argon2-cffi-bindings==21.2.0
+asttokens==2.0.5
+async-timeout==4.0.2
+attrs==24.2.0
+Babel==2.10.3
+backcall==0.2.0
+beautifulsoup4==4.11.1
+bleach==5.0.1
+blinker==1.5
+brotlipy==0.7.0
+cachetools==5.3.0
+certifi @ file:///private/var/folders/sy/f16zz6x50xz3113nwtb9bvq00000gp/T/abs_2emnmf1qow/croot/certifi_1690232232440/work/certifi
+cffi @ file:///private/var/folders/sy/f16zz6x50xz3113nwtb9bvq00000gp/T/croot-2p6q7e2r/cffi_1642701115063/work
+charset-normalizer @ file:///tmp/build/80754af9/charset-normalizer_1630003229654/work
+click==8.1.3
+click-plugins==1.1.1
+cligj==0.7.2
+colorama @ file:///tmp/build/80754af9/colorama_1607707115595/work
+conda==4.12.0
+conda-content-trust @ file:///tmp/build/80754af9/conda-content-trust_1617045594566/work
+conda-package-handling @ file:///opt/concourse/worker/volumes/live/0cf65687-72c2-4e51-5322-1b3a8c3aa6f5/volume/conda-package-handling_1649105815927/work
+contourpy==1.1.0
+cryptography @ file:///opt/concourse/worker/volumes/live/a9ca20dd-e1fe-4ed3-754e-0db64082a5d2/volume/cryptography_1639414576087/work
+cycler==0.11.0
+debugpy==1.6.2
+decorator==5.1.1
+defusedxml==0.7.1
+descartes==1.1.0
+entrypoints==0.4
+et-xmlfile==1.1.0
+exceptiongroup==1.2.2
+executing==0.9.1
+fastjsonschema==2.16.1
+Fiona==1.9.4.post1
+fonttools==4.40.0
+frozenlist==1.3.3
+gensim==4.2.0
+geographiclib==2.0
+geopandas==0.13.2
+geopy==2.3.0
+gguf==0.2.1
+gitdb==4.0.10
+GitPython==3.1.30
+google-api-core==2.11.1
+google-api-python-client==2.95.0
+google-auth==2.22.0
+google-auth-httplib2==0.1.0
+google-auth-oauthlib==1.0.0
+googleapis-common-protos==1.59.1
+h11==0.14.0
+httplib2==0.22.0
+idna @ file:///tmp/build/80754af9/idna_1637925883363/work
+importlib-metadata==4.12.0
+importlib-resources==5.12.0
+ipykernel==6.15.1
+ipython==8.4.0
+ipython-genutils==0.2.0
+jedi==0.18.1
+Jinja2==3.1.2
+joblib==1.3.1
+json5==0.9.9
+jsonschema==4.9.1
+jupyter-client==7.3.4
+jupyter-core==4.11.1
+jupyter-server==1.18.1
+jupyterlab==3.4.4
+jupyterlab-pygments==0.2.2
+jupyterlab-server==2.15.0
+jupyterthemes==0.20.0
+kiwisolver==1.4.4
+lesscpy==0.15.1
+libretranslatepy==2.1.1
+lxml==4.9.1
+markdown-it-py==2.1.0
+MarkupSafe==2.1.1
+matplotlib==3.7.1
+matplotlib-inline==0.1.3
+mdurl==0.1.2
+mistune==0.8.4
+multidict==6.0.4
+nbclassic==0.4.3
+nbclient==0.6.6
+nbconvert==6.5.0
+nbformat==5.4.0
+nest-asyncio==1.5.5
+nominatim==0.1
+notebook==6.4.12
+notebook-shim==0.1.0
+numpy==2.0.2
+oauthlib==3.2.2
+openai==0.27.2
+openpyxl==3.0.10
+outcome==1.3.0.post0
+packaging==21.3
+pandas==1.4.3
+pandocfilters==1.5.0
+parso==0.8.3
+pexpect==4.8.0
+pgeocode==0.4.0
+pickleshare==0.7.5
+Pillow==9.4.0
+ply==3.11
+prometheus-client==0.14.1
+prompt-toolkit==3.0.30
+protobuf==3.20.3
+psutil==5.9.1
+ptyprocess==0.7.0
+pure-eval==0.2.2
+pyarrow==11.0.0
+pyasn1==0.5.0
+pyasn1-modules==0.3.0
+pycosat==0.6.3
+pycparser @ file:///tmp/build/80754af9/pycparser_1636541352034/work
+pydeck==0.8.0
+Pygments==2.14.0
+Pympler==1.0.1
+pyOpenSSL @ file:///opt/conda/conda-bld/pyopenssl_1643788558760/work
+pyparsing==3.0.9
+pyproj==3.6.0
+pyrsistent==0.18.1
+PySimpleGUI==4.60.3
+PySocks @ file:///opt/concourse/worker/volumes/live/112288ac-9cb0-4e73-768b-13baf4ca6419/volume/pysocks_1605305820043/work
+python-dateutil==2.8.2
+pytz==2022.1
+pytz-deprecation-shim==0.1.0.post0
+pyzmq==23.2.0
+rawpy==0.24.0
+requests @ file:///opt/conda/conda-bld/requests_1641824580448/work
+requests-oauthlib==1.3.1
+rich==13.3.0
+rsa==4.9
+ruamel-yaml-conda @ file:///opt/concourse/worker/volumes/live/e81cf0fe-611a-498e-6e69-a7320057c1ac/volume/ruamel_yaml_1616016689696/work
+scikit-learn @ file:///private/var/folders/sy/f16zz6x50xz3113nwtb9bvq00000gp/T/abs_c1cbgsrq20/croot/scikit-learn_1690978919468/work
+scipy @ file:///private/var/folders/sy/f16zz6x50xz3113nwtb9bvq00000gp/T/abs_2eyzr35lpl/croot/scipy_1691606691057/work/dist/scipy-1.11.1-cp39-cp39-macosx_10_9_x86_64.whl#sha256=09ef68e376a145f61d20a206a2644ed1f5128cf3cf04395e6f89fb4c6f26c940
+selenium==4.24.0
+semver==2.13.0
+Send2Trash==1.8.0
+sentencepiece==0.1.98
+shapely==2.0.1
+six @ file:///tmp/build/80754af9/six_1644875935023/work
+sklearn==0.0.post5
+smart-open==6.0.0
+smmap==5.0.0
+sniffio==1.3.1
+sortedcontainers==2.4.0
+soupsieve==2.3.2.post1
+stack-data==0.3.0
+streamlit==1.17.0
+tabulate==0.9.0
+terminado==0.15.0
+threadpoolctl==3.1.0
+tinycss2==1.1.1
+toml==0.10.2
+toolz==0.12.0
+tornado==6.2
+tqdm @ file:///opt/conda/conda-bld/tqdm_1647339053476/work
+traitlets==5.3.0
+translate==3.6.1
+trio==0.26.2
+trio-websocket==0.11.1
+typing_extensions==4.12.2
+tzdata==2022.7
+tzlocal==4.2
+uritemplate==4.1.1
+urllib3 @ file:///opt/conda/conda-bld/urllib3_1643638302206/work
+validators==0.20.0
+wcwidth==0.2.5
+webencodings==0.5.1
+websocket-client==1.8.0
+workbook==1.1
+wsproto==1.2.0
+xlrd==2.0.1
+xlutils==2.0.0
+xlwt==1.3.0
+yarl==1.8.2
+zipp==3.8.1
