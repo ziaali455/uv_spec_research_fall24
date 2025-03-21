@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4D3F3DBE2D846454000E4D25 /* ChromaticityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D3F3DBD2D846454000E4D25 /* ChromaticityView.swift */; };
+		4D3F3DC12D8464A9000E4D25 /* RGBValuesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D3F3DC02D8464A9000E4D25 /* RGBValuesView.swift */; };
+		4D3F3DC32D8464BA000E4D25 /* MetadataView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D3F3DC22D8464BA000E4D25 /* MetadataView.swift */; };
+		4D3F3DC52D84664E000E4D25 /* MainViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D3F3DC42D84664E000E4D25 /* MainViewModel.swift */; };
 		4D5A61EE2D0C96E0009B8F7E /* CameraView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D5A61ED2D0C96E0009B8F7E /* CameraView.swift */; };
 		4D76661F2CB95C3900752335 /* uvsnApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D76661E2CB95C3900752335 /* uvsnApp.swift */; };
 		4D7666212CB95C3900752335 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D7666202CB95C3900752335 /* ContentView.swift */; };
@@ -21,6 +25,10 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		4D3F3DBD2D846454000E4D25 /* ChromaticityView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChromaticityView.swift; sourceTree = "<group>"; };
+		4D3F3DC02D8464A9000E4D25 /* RGBValuesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RGBValuesView.swift; sourceTree = "<group>"; };
+		4D3F3DC22D8464BA000E4D25 /* MetadataView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetadataView.swift; sourceTree = "<group>"; };
+		4D3F3DC42D84664E000E4D25 /* MainViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainViewModel.swift; sourceTree = "<group>"; };
 		4D5A61ED2D0C96E0009B8F7E /* CameraView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraView.swift; sourceTree = "<group>"; };
 		4D76661B2CB95C3900752335 /* uvsn.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = uvsn.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4D76661E2CB95C3900752335 /* uvsnApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = uvsnApp.swift; sourceTree = "<group>"; };
@@ -47,6 +55,16 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		4D3F3DBF2D84647C000E4D25 /* uvsn live */ = {
+			isa = PBXGroup;
+			children = (
+				4D3F3DBD2D846454000E4D25 /* ChromaticityView.swift */,
+				4D3F3DC02D8464A9000E4D25 /* RGBValuesView.swift */,
+				4D3F3DC22D8464BA000E4D25 /* MetadataView.swift */,
+			);
+			path = "uvsn live";
+			sourceTree = "<group>";
+		};
 		4D7666122CB95C3900752335 = {
 			isa = PBXGroup;
 			children = (
@@ -74,6 +92,8 @@
 				4D7666322CB964DE00752335 /* Info.plist */,
 				4D76661E2CB95C3900752335 /* uvsnApp.swift */,
 				4D76662E2CB95E7E00752335 /* MainView.swift */,
+				4D3F3DC42D84664E000E4D25 /* MainViewModel.swift */,
+				4D3F3DBF2D84647C000E4D25 /* uvsn live */,
 				4D7666202CB95C3900752335 /* ContentView.swift */,
 				4D76662C2CB95C6800752335 /* ImagePicker.swift */,
 				4D7666222CB95C3A00752335 /* Assets.xcassets */,
@@ -161,7 +181,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				4DCD99BA2CC949180039FB69 /* ColorResultView.swift in Sources */,
+				4D3F3DC32D8464BA000E4D25 /* MetadataView.swift in Sources */,
+				4D3F3DC12D8464A9000E4D25 /* RGBValuesView.swift in Sources */,
 				4D76662D2CB95C6800752335 /* ImagePicker.swift in Sources */,
+				4D3F3DBE2D846454000E4D25 /* ChromaticityView.swift in Sources */,
+				4D3F3DC52D84664E000E4D25 /* MainViewModel.swift in Sources */,
 				4D76662F2CB95E7E00752335 /* MainView.swift in Sources */,
 				4D5A61EE2D0C96E0009B8F7E /* CameraView.swift in Sources */,
 				4DCFD3462CDD40C400B55FAD /* CaptureView.swift in Sources */,
