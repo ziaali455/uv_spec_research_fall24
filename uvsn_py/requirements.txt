@@ -1,5 +1,5 @@
 matplotlib==3.7.1
-numpy==1.23.1
+numpy==2.2.4
 pandas==1.4.3
 Pillow==11.1.0
 rawpy==0.24.0
