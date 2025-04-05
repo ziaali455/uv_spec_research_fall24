@@ -1,6 +1,6 @@
-matplotlib==3.7.1
-numpy==2.2.4
-pandas==1.4.3
-Pillow==11.1.0
-rawpy==0.24.0
-streamlit==1.17.0
+matplotlib
+numpy
+pandas
+Pillow
+rawpy
+streamlit

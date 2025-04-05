@@ -162,6 +162,5 @@ def main():
             st.subheader("Reference")
             st.image("https://clarkvision.com/articles/color-cie-chromaticity-and-perception/color-rgb-xy-cie1931-diagram1g1000spjfjl1-1000-ciesrgb-axes-waveticks-c1-srgb-800.jpg")
 
-
 if __name__ == "__main__":
     main()
