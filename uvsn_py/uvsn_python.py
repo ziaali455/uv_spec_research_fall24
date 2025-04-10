@@ -26,7 +26,7 @@ def calculate_chromaticity(file_path, is_raw=True):
     try:
         if is_raw:
             with rawpy.imread(file_path) as raw:
-                rgb_image = raw.postprocess(output_bps=8, use_camera_wb=True)
+                rgb_image = raw.postprocess(output_bps=16, use_camera_wb=True)
         else:
             img = Image.open(file_path)
             rgb_image = np.array(img)
