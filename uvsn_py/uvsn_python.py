@@ -119,7 +119,7 @@ def main():
 
     with tab2:
         st.write("Upload an image file.")
-        uploaded_file = st.file_uploader("Choose an image", type=["jpg", "jpeg", "png", "dng"])
+        uploaded_file = st.file_uploader("Choose an image", type=["jpg", "jpeg", "png", "dng", "tiff"])
 
         if uploaded_file is not None:
             with st.spinner("Processing image..."):
