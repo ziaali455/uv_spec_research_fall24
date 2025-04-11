@@ -93,7 +93,7 @@ def get_csv_download_link(stats):
 def get_image_download_link(img):
     """Generates a link to download the processed image."""
     buffered = BytesIO()
-    img.save(buffered, format="JPEG", quality=90)
+    img.save(buffered, format="TIFF")
     img_str = base64.b64encode(buffered.getvalue()).decode()
     href = f'<a href="data:file/jpg;base64,{img_str}" download="processed_image.jpg">Download Processed Image</a>'
     return href
@@ -138,7 +138,8 @@ def main():
 
         with col1:
             st.subheader("Processed Image")
-            pil_img = Image.fromarray(processed_image)
+            display_image = (processed_image / 256).astype(np.uint8)
+            pil_img = Image.fromarray(display_image)
             st.image(pil_img)
             st.markdown(get_image_download_link(pil_img), unsafe_allow_html=True)
 
