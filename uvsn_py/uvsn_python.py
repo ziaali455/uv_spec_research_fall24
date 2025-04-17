@@ -33,21 +33,37 @@ def calculate_chromaticity(file_path, is_raw=True):
     try:
         if is_raw:
             with rawpy.imread(file_path) as raw:
-                rgb_image = raw.postprocess(output_bps=16)
-        else:
-            img = Image.open(file_path)
-            rgb_image = np.array(img)
+                # Black level correction
+                raw_image = raw.raw_image_visible.astype(np.float32)
+                black_level = np.mean(raw.black_level_per_channel)
+                raw_image -= black_level
+                raw_image = np.clip(raw_image, 0, None)
 
-        rgb_float = rgb_image.astype(np.float32)
+                # Demosaic to RGB
+                rgb_image = raw.postprocess(
+                    output_bps=16,
+                    no_auto_bright=True,
+                    use_camera_wb=False,
+                    gamma=(1, 1),
+                    output_color=rawpy.ColorSpace.raw
+                )
+        else:
+            img = Image.open(file_path).convert("RGB")
+            rgb_image = np.array(img).astype(np.float32)
+
+        # Normalize to [0, 1] range
+        rgb_float = rgb_image / np.max(rgb_image)
         r, g, b = rgb_float[..., 0], rgb_float[..., 1], rgb_float[..., 2]
         total = r + g + b
-        total[total == 0] = 1e-6
+        #avoid dividing by 0 for nearly black pixels
+        mask = total > 1e-6
 
-        r_chromaticity = r / total
-        g_chromaticity = g / total
+        r_chromaticity = np.zeros_like(r)
+        g_chromaticity = np.zeros_like(g)
+        r_chromaticity[mask] = r[mask] / total[mask]
+        g_chromaticity[mask] = g[mask] / total[mask]
 
-        mask = ~np.isnan(r_chromaticity) & ~np.isnan(g_chromaticity)
-
+        # Compute stats
         stats = {
             'mean_r': float(np.mean(r_chromaticity[mask])),
             'mean_g': float(np.mean(g_chromaticity[mask])),
@@ -58,9 +74,12 @@ def calculate_chromaticity(file_path, is_raw=True):
         }
 
         return stats, rgb_image
+
     except Exception as e:
         st.error(f"Error processing image: {str(e)}")
         return None, None
+
+
 
 def extract_exif_and_compute_brightness(img: Image.Image):
     try:
