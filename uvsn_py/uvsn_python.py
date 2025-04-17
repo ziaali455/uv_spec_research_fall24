@@ -2,76 +2,100 @@ import streamlit as st
 import rawpy
 import numpy as np
 import matplotlib.pyplot as plt
-from PIL import Image
+from PIL import Image, ExifTags
 import tempfile
 import os
 import pandas as pd
 from io import BytesIO
 import base64
+import json
+import math
+import zipfile
 
-# Set page configuration
 st.set_page_config(page_title="Chromaticity Analyzer", layout="wide")
 
+if "results_jsons" not in st.session_state:
+    st.session_state.results_jsons = []
+
+lamp_options = [
+    "222 Ushio", "222 Nukit", "222 Lumen", "222 Unfiltered",
+    "207 KrBr", "254", "265 LED", "280 LED", "295 LED", "302",
+    "365", "sunlight", "Room light (fluorescent)"
+]
+
 def create_temp_file(content, extension=".jpg"):
-    """Create a temporary file with the provided content."""
     temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=extension)
     temp_file.write(content)
     temp_file.close()
     return temp_file.name
 
 def calculate_chromaticity(file_path, is_raw=True):
-    """
-    Reads an image (RAW or regular), extracts RGB values, and computes average chromaticity.
-    """
     try:
         if is_raw:
             with rawpy.imread(file_path) as raw:
-                rgb_image = raw.postprocess(output_bps=16, use_camera_wb=True)
+                rgb_image = raw.postprocess(output_bps=16)
         else:
             img = Image.open(file_path)
             rgb_image = np.array(img)
 
-        # Normalize to range [0, 1]
-        rgb_float = rgb_image.astype(np.float32) / 255.0 if rgb_image.dtype == np.uint8 else rgb_image.astype(np.float32) / 65535.0
+        rgb_float = rgb_image.astype(np.float32)
         r, g, b = rgb_float[..., 0], rgb_float[..., 1], rgb_float[..., 2]
-
-        # Compute chromaticity
         total = r + g + b
-        mask = total > 1e-6  # Avoid division by zero
+        total[total == 0] = 1e-6
 
-        r_chromaticity = np.zeros_like(r)
-        g_chromaticity = np.zeros_like(g)
+        r_chromaticity = r / total
+        g_chromaticity = g / total
 
-        r_chromaticity[mask] = r[mask] / total[mask]
-        g_chromaticity[mask] = g[mask] / total[mask]
+        mask = ~np.isnan(r_chromaticity) & ~np.isnan(g_chromaticity)
 
-        # Calculate average r and g
-        mean_r = np.mean(r_chromaticity[mask])
-        mean_g = np.mean(g_chromaticity[mask])
-
-        # Calculate statistics
         stats = {
-            'mean_r': mean_r,
-            'mean_g': mean_g,
-            'std_r': np.std(r_chromaticity[mask]),
-            'std_g': np.std(g_chromaticity[mask])
+            'mean_r': float(np.mean(r_chromaticity[mask])),
+            'mean_g': float(np.mean(g_chromaticity[mask])),
+            'std_r': float(np.std(r_chromaticity[mask])),
+            'std_g': float(np.std(g_chromaticity[mask])),
+            'max_r': float(np.max(r_chromaticity[mask])),
+            'max_g': float(np.max(g_chromaticity[mask]))
         }
-        return mean_r, mean_g, rgb_image, stats
 
+        return stats, rgb_image
     except Exception as e:
         st.error(f"Error processing image: {str(e)}")
-        return None, None, None, None
+        return None, None
 
-def plot_average_chromaticity(mean_r, mean_g):
-    """
-    Plots the average chromaticity as a single point.
-    """
+def extract_exif_and_compute_brightness(img: Image.Image):
+    try:
+        exif = img._getexif()
+    except:
+        exif = None
+
+    exif_data = {}
+    if exif:
+        for tag, value in exif.items():
+            tag_name = ExifTags.TAGS.get(tag, tag)
+            exif_data[tag_name] = value
+
+    iso = exif_data.get('ISOSpeedRatings', None)
+    f_number = exif_data.get('FNumber', None)
+    exposure = exif_data.get('ExposureTime', None)
+
+    sv = math.log2(iso / 3.3333) if iso else None
+    av = 2 * math.log2(f_number) if f_number else None
+    tv = -math.log2(exposure) if exposure else None
+    bv = av + tv - sv if all(v is not None for v in [sv, av, tv]) else None
+
+    return {
+        "ISOSpeedRatings": iso,
+        "FNumber": f_number,
+        "ExposureTime": exposure,
+        "S_v": sv,
+        "A_v": av,
+        "T_v": tv,
+        "B_v": bv
+    }
+
+def plot_average_chromaticity(stats):
     fig, ax = plt.subplots(figsize=(8, 6))
-
-    # Plot the average chromaticity point
-    ax.scatter(mean_r, mean_g, s=100, color='red', marker='o', label='Average Chromaticity')
-
-    # Set axis labels and limits
+    ax.scatter(stats['mean_r'], stats['mean_g'], s=100, color='red', marker='o', label='Average Chromaticity')
     ax.set_xlabel('Red Chromaticity (r)')
     ax.set_ylabel('Green Chromaticity (g)')
     ax.set_xlim(0, 1)
@@ -79,61 +103,44 @@ def plot_average_chromaticity(mean_r, mean_g):
     ax.set_title('Average Chromaticity')
     ax.legend()
     ax.grid(True)
-
     return fig
 
-def get_csv_download_link(stats):
-    """Generates a link to download statistics as a CSV file."""
-    df = pd.DataFrame([stats])
-    csv = df.to_csv(index=False)
-    b64 = base64.b64encode(csv.encode()).decode()
-    href = f'<a href="data:file/csv;base64,{b64}" download="chromaticity_stats.csv">Download Statistics</a>'
-    return href
-
 def get_image_download_link(img):
-    """Generates a link to download the processed image."""
     buffered = BytesIO()
     img.save(buffered, format="TIFF")
     img_str = base64.b64encode(buffered.getvalue()).decode()
-    href = f'<a href="data:file/jpg;base64,{img_str}" download="processed_image.jpg">Download Processed Image</a>'
-    return href
+    return f'<a href="data:image/tiff;base64,{img_str}" download="processed_image.tiff">Download Image</a>'
 
 def main():
     st.title("Chromaticity Analyzer")
 
-    # Tabs for camera input and file upload
     tab1, tab2 = st.tabs(["📷 Take a Picture", "📁 Upload an Image"])
-
-    processed_data = None
+    processed_image = None
+    stats = None
+    uploaded_file = None
 
     with tab1:
         st.write("Capture an image using your device's camera.")
         picture = st.camera_input("Take a picture")
-
-        if picture is not None:
+        if picture:
             with st.spinner("Processing image..."):
                 temp_file = create_temp_file(picture.getvalue(), ".jpg")
-                processed_data = calculate_chromaticity(temp_file, is_raw=False)
-
+                stats, processed_image = calculate_chromaticity(temp_file, is_raw=False)
+                uploaded_file = picture
                 os.remove(temp_file)
 
     with tab2:
         st.write("Upload an image file.")
         uploaded_file = st.file_uploader("Choose an image", type=["jpg", "jpeg", "png", "dng", "tiff"])
-
-        if uploaded_file is not None:
+        if uploaded_file:
             with st.spinner("Processing image..."):
-                file_extension = os.path.splitext(uploaded_file.name)[1].lower()
-                is_raw = file_extension in ['.dng']
-                temp_file = create_temp_file(uploaded_file.getvalue(), file_extension)
-
-                processed_data = calculate_chromaticity(temp_file, is_raw=is_raw)
-
+                ext = os.path.splitext(uploaded_file.name)[1].lower()
+                is_raw = ext in ['.dng']
+                temp_file = create_temp_file(uploaded_file.getvalue(), ext)
+                stats, processed_image = calculate_chromaticity(temp_file, is_raw=is_raw)
                 os.remove(temp_file)
 
-    if processed_data and all(x is not None for x in processed_data):
-        mean_r, mean_g, processed_image, stats = processed_data
-
+    if stats and processed_image is not None:
         col1, col2 = st.columns([2, 3])
 
         with col1:
@@ -143,25 +150,41 @@ def main():
             st.image(pil_img)
             st.markdown(get_image_download_link(pil_img), unsafe_allow_html=True)
 
-            st.subheader("Statistics")
-            stats_df = pd.DataFrame({
-                'Metric': ['Mean Red', 'Mean Green', 'Std Red', 'Std Green'],
-                'Value': [
-                    f"{stats['mean_r']:.4f}",
-                    f"{stats['mean_g']:.4f}",
-                    f"{stats['std_r']:.4f}",
-                    f"{stats['std_g']:.4f}"
-                ]
-            })
-            st.table(stats_df)
-            st.markdown(get_csv_download_link(stats), unsafe_allow_html=True)
+            st.subheader("Chromaticity Stats")
+            st.table(pd.DataFrame(stats.items(), columns=["Metric", "Value"]))
 
         with col2:
             st.subheader("Average Chromaticity Plot")
-            fig = plot_average_chromaticity(mean_r, mean_g)
+            fig = plot_average_chromaticity(stats)
             st.pyplot(fig)
-            st.subheader("Reference")
-            st.image("https://clarkvision.com/articles/color-cie-chromaticity-and-perception/color-rgb-xy-cie1931-diagram1g1000spjfjl1-1000-ciesrgb-axes-waveticks-c1-srgb-800.jpg")
+
+        lamp_condition = st.selectbox("Select Lamp Condition", lamp_options)
+
+        if st.button("Save Image Stats to JSON"):
+            exif_stats = extract_exif_and_compute_brightness(pil_img)
+            result = {
+                "image_name": uploaded_file.name if uploaded_file else "camera_image",
+                "lamp_condition": lamp_condition,
+                "chromaticity": stats,
+                "exif_and_brightness": {
+                    k: float(v) if isinstance(v, (int, float, np.number)) and v is not None else v
+                    for k, v in exif_stats.items()
+                }
+            }
+            st.session_state.results_jsons.append((result["image_name"], json.dumps(result, indent=2)))
+            st.success("Saved! Add more images or download all.")
+
+    if st.session_state.results_jsons:
+        if st.button("Download All as ZIP"):
+            zip_buffer = BytesIO()
+            with zipfile.ZipFile(zip_buffer, "w") as zipf:
+                for name, data in st.session_state.results_jsons:
+                    json_name = os.path.splitext(name)[0] + "_stats.json"
+                    zipf.writestr(json_name, data)
+            zip_buffer.seek(0)
+            b64 = base64.b64encode(zip_buffer.read()).decode()
+            href = f'<a href="data:application/zip;base64,{b64}" download="all_image_stats.zip">📦 Download All Image Stats</a>'
+            st.markdown(href, unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
