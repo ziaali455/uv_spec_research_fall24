@@ -33,13 +33,11 @@ def calculate_chromaticity(file_path, is_raw=True):
     try:
         if is_raw:
             with rawpy.imread(file_path) as raw:
-                # Black level correction
                 raw_image = raw.raw_image_visible.astype(np.float32)
                 black_level = np.mean(raw.black_level_per_channel)
                 raw_image -= black_level
                 raw_image = np.clip(raw_image, 0, None)
 
-                # Demosaic to RGB
                 rgb_image = raw.postprocess(
                     output_bps=16,
                     no_auto_bright=True,
@@ -51,11 +49,9 @@ def calculate_chromaticity(file_path, is_raw=True):
             img = Image.open(file_path).convert("RGB")
             rgb_image = np.array(img).astype(np.float32)
 
-        # Normalize to [0, 1] range
         rgb_float = rgb_image / np.max(rgb_image)
         r, g, b = rgb_float[..., 0], rgb_float[..., 1], rgb_float[..., 2]
         total = r + g + b
-        #avoid dividing by 0 for nearly black pixels
         mask = total > 1e-6
 
         r_chromaticity = np.zeros_like(r)
@@ -63,14 +59,14 @@ def calculate_chromaticity(file_path, is_raw=True):
         r_chromaticity[mask] = r[mask] / total[mask]
         g_chromaticity[mask] = g[mask] / total[mask]
 
-        # Compute stats
         stats = {
             'mean_r': float(np.mean(r_chromaticity[mask])),
             'mean_g': float(np.mean(g_chromaticity[mask])),
             'std_r': float(np.std(r_chromaticity[mask])),
             'std_g': float(np.std(g_chromaticity[mask])),
-            'max_r': float(np.max(r_chromaticity[mask])),
-            'max_g': float(np.max(g_chromaticity[mask]))
+            'max_r': float(np.max(r)),
+            'max_g': float(np.max(g)),
+            'max_b': float(np.max(b))
         }
 
         return stats, rgb_image
@@ -78,8 +74,6 @@ def calculate_chromaticity(file_path, is_raw=True):
     except Exception as e:
         st.error(f"Error processing image: {str(e)}")
         return None, None
-
-
 
 def extract_exif_and_compute_brightness(img: Image.Image):
     try:
