@@ -144,7 +144,7 @@ def main():
 
     with tab2:
         st.write("Upload an image file.")
-        uploaded_file = st.file_uploader("Choose an image", type=["jpg", "jpeg", "png", "dng", "tiff"])
+        uploaded_file = st.file_uploader("Choose an image", type=["jpg", "jpeg", "png", "dng", "tiff", "JPG", "JPEG", "PNG", "DNG", "TIFF"])
         if uploaded_file:
             with st.spinner("Processing image..."):
                 ext = os.path.splitext(uploaded_file.name)[1].lower()
