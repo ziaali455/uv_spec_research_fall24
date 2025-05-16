@@ -11,8 +11,16 @@ import base64
 import json
 import math
 import zipfile
+import exifread
 
 st.set_page_config(page_title="Chromaticity Analyzer", layout="wide")
+from fractions import Fraction
+
+def safe_parse_fraction(val):
+    try:
+        return float(Fraction(str(val)))
+    except Exception:
+        return None
 
 if "results_jsons" not in st.session_state:
     st.session_state.results_jsons = []
@@ -75,36 +83,71 @@ def calculate_chromaticity(file_path, is_raw=True):
         st.error(f"Error processing image: {str(e)}")
         return None, None
 
-def extract_exif_and_compute_brightness(img: Image.Image):
-    try:
-        exif = img._getexif()
-    except:
-        exif = None
-
+def extract_exif_and_compute_brightness(img: Image.Image, file_bytes=None, is_raw=False):
     exif_data = {}
-    if exif:
-        for tag, value in exif.items():
-            tag_name = ExifTags.TAGS.get(tag, tag)
-            exif_data[tag_name] = value
+    key_stats = {}
 
-    iso = exif_data.get('ISOSpeedRatings', None)
-    f_number = exif_data.get('FNumber', None)
-    exposure = exif_data.get('ExposureTime', None)
+    if is_raw and file_bytes is not None:
+        try:
+            tags = exifread.process_file(BytesIO(file_bytes), details=False)
+            for tag in tags:
+                exif_data[tag] = str(tags[tag])
 
-    sv = math.log2(iso / 3.3333) if iso else None
-    av = 2 * math.log2(f_number) if f_number else None
-    tv = -math.log2(exposure) if exposure else None
-    bv = av + tv - sv if all(v is not None for v in [sv, av, tv]) else None
+            iso = tags.get("EXIF ISOSpeedRatings", None)
+            f_number = tags.get("EXIF FNumber", None)
+            exposure = tags.get("EXIF ExposureTime", None)
 
-    return {
-        "ISOSpeedRatings": iso,
-        "FNumber": f_number,
-        "ExposureTime": exposure,
-        "S_v": sv,
-        "A_v": av,
-        "T_v": tv,
-        "B_v": bv
-    }
+            iso_val = safe_parse_fraction(iso) if iso else None
+            f_val = safe_parse_fraction(f_number) if f_number else None
+            exposure_val = safe_parse_fraction(exposure) if exposure else None
+
+            sv = math.log2(iso_val / 3.3333) if iso_val else None
+            av = 2 * math.log2(f_val) if f_val else None
+            tv = -math.log2(exposure_val) if exposure_val else None
+            bv = av + tv - sv if all(v is not None for v in [sv, av, tv]) else None
+
+            key_stats = {
+                "ISOSpeedRatings": iso_val,
+                "FNumber": f_val,
+                "ExposureTime": exposure_val,
+                "S_v": sv,
+                "A_v": av,
+                "T_v": tv,
+                "B_v": bv
+            }
+        except Exception as e:
+            st.warning(f"Failed to parse RAW EXIF metadata: {e}")
+    else:
+        try:
+            exif = img._getexif()
+        except:
+            exif = None
+
+        if exif:
+            for tag, value in exif.items():
+                tag_name = ExifTags.TAGS.get(tag, tag)
+                exif_data[tag_name] = value
+
+        iso = exif_data.get('ISOSpeedRatings', None)
+        f_number = exif_data.get('FNumber', None)
+        exposure = exif_data.get('ExposureTime', None)
+
+        sv = math.log2(iso / 3.3333) if iso else None
+        av = 2 * math.log2(f_number) if f_number else None
+        tv = -math.log2(exposure) if exposure else None
+        bv = av + tv - sv if all(v is not None for v in [sv, av, tv]) else None
+
+        key_stats = {
+            "ISOSpeedRatings": iso,
+            "FNumber": f_number,
+            "ExposureTime": exposure,
+            "S_v": sv,
+            "A_v": av,
+            "T_v": tv,
+            "B_v": bv
+        }
+
+    return key_stats, exif_data
 
 def plot_average_chromaticity(stats):
     fig, ax = plt.subplots(figsize=(8, 6))
@@ -130,6 +173,8 @@ def main():
     tab1, tab2 = st.tabs(["📷 Take a Picture", "📁 Upload an Image"])
     processed_image = None
     stats = None
+    exif_stats = {}
+    exif_full = {}
     uploaded_file = None
 
     with tab1:
@@ -137,9 +182,20 @@ def main():
         picture = st.camera_input("Take a picture")
         if picture:
             with st.spinner("Processing image..."):
-                temp_file = create_temp_file(picture.getvalue(), ".jpg")
-                stats, processed_image = calculate_chromaticity(temp_file, is_raw=False)
                 uploaded_file = picture
+                image_bytes = picture.getvalue()
+                temp_file = create_temp_file(image_bytes, ".jpg")
+
+                stats, processed_image = calculate_chromaticity(temp_file, is_raw=False)
+
+                try:
+                    pil_img_original = Image.open(BytesIO(image_bytes))
+                    exif_stats, exif_full = extract_exif_and_compute_brightness(
+                        pil_img_original, file_bytes=image_bytes, is_raw=False
+                    )
+                except Exception as e:
+                    st.warning(f"Failed to extract EXIF data: {e}")
+
                 os.remove(temp_file)
 
     with tab2:
@@ -147,10 +203,21 @@ def main():
         uploaded_file = st.file_uploader("Choose an image", type=["jpg", "jpeg", "png", "dng", "tiff", "JPG", "JPEG", "PNG", "DNG", "TIFF"])
         if uploaded_file:
             with st.spinner("Processing image..."):
+                image_bytes = uploaded_file.getvalue()
                 ext = os.path.splitext(uploaded_file.name)[1].lower()
                 is_raw = ext in ['.dng']
-                temp_file = create_temp_file(uploaded_file.getvalue(), ext)
+
+                temp_file = create_temp_file(image_bytes, ext)
                 stats, processed_image = calculate_chromaticity(temp_file, is_raw=is_raw)
+
+                try:
+                    pil_img_original = Image.open(BytesIO(image_bytes))
+                    exif_stats, exif_full = extract_exif_and_compute_brightness(
+                        pil_img_original, file_bytes=image_bytes, is_raw=is_raw
+                    )
+                except Exception as e:
+                    st.warning(f"Failed to extract EXIF data: {e}")
+
                 os.remove(temp_file)
 
     if stats and processed_image is not None:
@@ -166,6 +233,16 @@ def main():
             st.subheader("Chromaticity Stats")
             st.table(pd.DataFrame(stats.items(), columns=["Metric", "Value"]))
 
+            if exif_stats:
+                st.subheader("EXIF + Brightness")
+                st.table(pd.DataFrame(exif_stats.items(), columns=["EXIF", "Value"]))
+
+                with st.expander("🔍 Full EXIF Metadata"):
+                    if exif_full:
+                        st.table(pd.DataFrame(exif_full.items(), columns=["Tag", "Value"]))
+                    else:
+                        st.info("No EXIF metadata found.")
+
         with col2:
             st.subheader("Average Chromaticity Plot")
             fig = plot_average_chromaticity(stats)
@@ -174,7 +251,6 @@ def main():
         lamp_condition = st.selectbox("Select Lamp Condition", lamp_options)
 
         if st.button("Save Image Stats to JSON"):
-            exif_stats = extract_exif_and_compute_brightness(pil_img)
             result = {
                 "image_name": uploaded_file.name if uploaded_file else "camera_image",
                 "lamp_condition": lamp_condition,

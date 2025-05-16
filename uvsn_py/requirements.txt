@@ -4,3 +4,4 @@ pandas
 Pillow
 rawpy
 streamlit
+exifread
