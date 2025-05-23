@@ -258,6 +258,9 @@ def main():
                 "exif_and_brightness": {
                     k: float(v) if isinstance(v, (int, float, np.number)) and v is not None else v
                     for k, v in exif_stats.items()
+                },
+                "full_exif_metadata": {
+                    k: str(v) for k, v in exif_full.items()
                 }
             }
             st.session_state.results_jsons.append((result["image_name"], json.dumps(result, indent=2)))
